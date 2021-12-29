@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 namespace TopDownCharacter
 {
-    public class PlayerInput : CharacterBehaviour, IMovementInput
+    public class PlayerInput : CharacterBehaviour, IMovementInput, IActionInput
     {
         public event Action<MovementInput> MovementInputUpdated;
         public event Action<LookInput> LookInputUpdated;
@@ -98,6 +98,12 @@ namespace TopDownCharacter
             _activeInputActionMap.FindAction("Look").performed += OnLookInputChanged;
             
             _activeInputActionMap.FindAction("Sprint").performed += ToggleSprint;
+            _activeInputActionMap.FindAction("Jump").performed += TriggerJump;
+        }
+
+        void TriggerJump(InputAction.CallbackContext obj)
+        {
+            Jump?.Invoke();
         }
 
         void UnsubscribeInputActionEvents()
@@ -113,6 +119,7 @@ namespace TopDownCharacter
             _activeInputActionMap.FindAction("Look").performed -= OnLookInputChanged;
             
             _activeInputActionMap.FindAction("Sprint").performed -= ToggleSprint;
+            _activeInputActionMap.FindAction("Jump").performed -= TriggerJump;
         }
 
         void OnMovementInputChanged(InputAction.CallbackContext context)
@@ -236,5 +243,6 @@ namespace TopDownCharacter
             SprintEnabled = !SprintEnabled;
         }
 
+        public event Action Jump;
     }
 }

@@ -58,6 +58,9 @@ namespace TopDownCharacter.States
         void Landed()
         {
             if (_landed) return;
+            
+            Log($"Landing detected. Playing landing animation.");
+            
             _landed = true;
             
             ClipTransition landingAnimation =
@@ -72,6 +75,8 @@ namespace TopDownCharacter.States
         {
             _canExitState = true;
             Character.Controller.RootMotionEnabled = false;
+            
+            Log($"Landing animation completed. Resuming idle.");
 
             Character.ParentStateMachine.CurrentState.ForceSetDefaultState();
         }
