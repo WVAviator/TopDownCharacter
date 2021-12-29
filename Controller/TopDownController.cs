@@ -51,8 +51,13 @@ namespace TopDownCharacter
         Vector3 _additionalVelocity;
         Quaternion _additionalRotation;
 
+        Vector3 _lastVelocity = Vector3.zero;
+
         PositionWarp _activePositionWarp = new PositionWarp();
         RotationWarp _activeRotationWarp = new RotationWarp();
+
+        public event Action<CharacterGroundingReport> GroundingStatusChanged;
+        public event Action<Vector3> VelocityUpdated;
 
         protected override void Awake()
         {
@@ -132,13 +137,17 @@ namespace TopDownCharacter
 
         public void PostGroundingUpdate(float deltaTime)
         {
-            
+            if (!Character.Motor.GroundingStatus.IsStableOnGround && Character.Motor.LastGroundingStatus.IsStableOnGround) GroundingStatusChanged?.Invoke(Character.Motor.GroundingStatus);
+            if (Character.Motor.GroundingStatus.IsStableOnGround && !Character.Motor.LastGroundingStatus.IsStableOnGround) GroundingStatusChanged?.Invoke(Character.Motor.GroundingStatus);
         }
 
         public void AfterCharacterUpdate(float deltaTime)
         {
             _additionalVelocity = Vector3.zero;
             _additionalRotation = Quaternion.identity;
+            
+            if(Character.Motor.Velocity != _lastVelocity) VelocityUpdated?.Invoke(Character.Motor.Velocity);
+            _lastVelocity = Character.Motor.Velocity;
         }
 
         public bool IsColliderValidForCollisions(Collider coll) => CollisionEnabled;

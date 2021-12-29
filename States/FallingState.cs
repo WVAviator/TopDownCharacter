@@ -1,5 +1,6 @@
 using Animancer;
 using Animancer.FSM;
+using KinematicCharacterController;
 using UnityEngine;
 
 namespace TopDownCharacter.States
@@ -9,6 +10,8 @@ namespace TopDownCharacter.States
 
         [SerializeField] ClipTransition _fallingControlledAnimation;
         [SerializeField] ClipTransition _fallingUncontrolledAnimation;
+        
+        [Tooltip("If vertical velocity magnitude exceeds this value, the character will begin flailing and will land hard.")]
         [SerializeField] float maxVerticalControlledVelocity = -10f;
 
         [SerializeField] ClipTransition _safeLandingAnimation;
@@ -20,8 +23,9 @@ namespace TopDownCharacter.States
 
         public override bool CanExitState => _canExitState;
 
-        void Start()
+        protected override void LateAwake()
         {
+            Character.Controller.GroundingStatusChanged += OnGroundingStatusChanged;
             _safeLandingAnimation.Events.OnEnd += ResumeGroundedState;
             _hardLandingAnimation.Events.OnEnd += ResumeGroundedState;
         }
@@ -35,6 +39,13 @@ namespace TopDownCharacter.States
             Character.Animancer.Play(_fallingControlledAnimation);
         }
 
+        void OnGroundingStatusChanged(CharacterGroundingReport groundingStatus)
+        {
+            Log($"Registered a change in grounding status, character is now {(groundingStatus.IsStableOnGround ? "stable on the ground." : "in the air.")}");
+            if (!groundingStatus.IsStableOnGround) Character.SubStateMachineBuffer.Buffer(this, 0.5f);
+            else Landed();
+        }
+
         void FixedUpdate()
         {
             if (!_isFallingUncontrolled && Character.Motor.Velocity.y < maxVerticalControlledVelocity)
@@ -42,30 +53,27 @@ namespace TopDownCharacter.States
                 _isFallingUncontrolled = true;
                 Character.Animancer.Play(_fallingUncontrolledAnimation);
             }
+        }
 
-            if (!_landed && Character.Motor.GroundingStatus.IsStableOnGround)
-            {
-                _landed = true;
+        void Landed()
+        {
+            if (_landed) return;
+            _landed = true;
+            
+            ClipTransition landingAnimation =
+                _isFallingUncontrolled ? _hardLandingAnimation : _safeLandingAnimation;
 
-                ClipTransition landingAnimation =
-                    _isFallingUncontrolled ? _hardLandingAnimation : _safeLandingAnimation;
-
-                Character.Controller.RootMotionEnabled = true;
+            Character.Controller.RootMotionEnabled = true;
                 
-                Character.Animancer.Play(landingAnimation);
-            }
+            Character.Animancer.Play(landingAnimation);
         }
 
         void ResumeGroundedState()
         {
             _canExitState = true;
             Character.Controller.RootMotionEnabled = false;
-            
-            StateMachine<CharacterState> parentStateMachine = Character.SubStateMachine;
-            CharacterState targetState = Character.MovementInput.CurrentMovementInput.HasInput 
-                ? Character.ParentStateMachine.CurrentState.Movement 
-                : Character.ParentStateMachine.CurrentState.Idle;
-            parentStateMachine.TrySetState(targetState);
+
+            Character.ParentStateMachine.CurrentState.ForceSetDefaultState();
         }
     }
 }

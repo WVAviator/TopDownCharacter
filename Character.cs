@@ -33,6 +33,9 @@ namespace TopDownCharacter
 
         public StateMachine<CharacterState> SubStateMachine => ParentStateMachine.CurrentState.StateMachine;
 
+        public StateMachine<CharacterState>.InputBuffer SubStateMachineBuffer =>
+            ParentStateMachine.CurrentState.InputBuffer;
+
         void Awake()
         {
             Animancer = GetComponentInChildren<AnimancerComponent>();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Animancer.FSM;
 using UnityEngine;
 
@@ -13,6 +14,17 @@ namespace TopDownCharacter.States
         protected virtual void Awake()
         {
             Character = transform.root.GetComponentInChildren<Character>();
+            StartCoroutine(InvokeLateAwake());
+        }
+
+        IEnumerator InvokeLateAwake()
+        {
+            yield return new WaitForEndOfFrame();
+            LateAwake();
+        }
+        protected virtual void LateAwake()
+        {
+            
         }
         
         protected void Log(string logString)

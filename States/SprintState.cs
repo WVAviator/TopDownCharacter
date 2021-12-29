@@ -6,70 +6,62 @@ namespace TopDownCharacter.States
 {
     public class SprintState : CharacterState
     {
-
         [SerializeField] MixerTransition2D _sprintMixer;
-        
-        [Tooltip("If the character's speed falls below this amount, sprint state will be exited.")]
-        [SerializeField] float minimumSprintSpeed = 3f;
 
         [Tooltip("If the character tries to strafe facing this many degrees away from the direction they are moving, sprint state will be exited.")]
-        [SerializeField] float _minimumVelocityFacingAngle = 20f;
+        [SerializeField] float _minimumVelocityFacingAngle = 50f;
         
+        [Tooltip("When the sprint state is enabled, these parameters will be swapped for the current parameters. Sprint should be faster but less maneuverable.")]
         [SerializeField] ControllerParameters _sprintParameters;
         ControllerParameters _previousParameters;
 
         VelocityDirectionCalculator _velocityDirectionCalculator;
-        VelocityDirectionCalculator VelocityDirectionCalculator =>
-            _velocityDirectionCalculator ??= new VelocityDirectionCalculator(Character.Motor, Character.Controller);
 
-        void Start()
+        protected override void LateAwake()
         {
             _velocityDirectionCalculator = new VelocityDirectionCalculator(Character.Motor, Character.Controller);
+            Character.MovementInput.MovementInputUpdated += OnMovementInputUpdated;
+        }
+
+        void OnMovementInputUpdated(MovementInput movementInput)
+        {
+            if (movementInput.SprintEnabled)
+            {
+                Log($"Sprint input detected... Trying to enter sprint state.");
+                Character.SubStateMachine.TrySetState(this);
+            }
         }
 
         void OnEnable()
         {
+            Log($"Swapping controller parameters for sprint speed/maneuverability.");
             _previousParameters = Character.Controller.ActiveControllerParameters;
             Character.Controller.ActiveControllerParameters = _sprintParameters;
+            
             Character.Animancer.Play(_sprintMixer);
         }
 
         void OnDisable()
         {
+            Log($"Exiting sprint state and restoring previous controller parameters.");
             Character.Controller.ActiveControllerParameters = _previousParameters;
         }
+        
+        public override bool CanExitState => !Character.MovementInput.SprintEnabled || !Character.Motor.GroundingStatus.IsStableOnGround;
 
-        public override bool CanEnterState
-        {
-            get
-            {
-                if (!Character.MovementInput.SprintEnabled) return false;
-
-                if (!GoingTooSlow() && !TryingToStrafe()) return true;
-                
-                Character.MovementInput.SprintEnabled = false;
-                return false;
-            }
-        }
 
         void FixedUpdate()
         {
-            _sprintMixer.State.Parameter = _velocityDirectionCalculator.VelocityFacingDirection;
+            Vector2 velocityFacingDirection = _velocityDirectionCalculator.VelocityFacingDirection;
             
-            if (!GoingTooSlow() && !TryingToStrafe() && Character.MovementInput.SprintEnabled) return;
-            Character.MovementInput.SprintEnabled = false;
-                
-            if (!Character.SubStateMachine.TrySetState(Character.ParentStateMachine.CurrentState.Movement))
-                Character.SubStateMachine.TrySetState(Character.ParentStateMachine.CurrentState.Idle);
+            Trace("Sprint Parameter", velocityFacingDirection);
+            _sprintMixer.State.Parameter = velocityFacingDirection;
 
-            
+            if (_velocityDirectionCalculator.VelocityFacingAngle > _minimumVelocityFacingAngle)
+            {
+                Log($"Character is trying to turn too sharply, sprint will be disabled.");
+                Character.MovementInput.SprintEnabled = false;
+            }
         }
-
-        bool TryingToStrafe()
-        {
-            return VelocityDirectionCalculator.VelocityFacingAngle.Abs() > _minimumVelocityFacingAngle;
-        }
-
-        bool GoingTooSlow() => Character.Motor.Velocity.sqrMagnitude < minimumSprintSpeed * minimumSprintSpeed;
     }
 }

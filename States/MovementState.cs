@@ -10,9 +10,29 @@ namespace TopDownCharacter.States
 
         VelocityDirectionCalculator _velocityDirectionCalculator;
 
-        void Start()
+        protected override void LateAwake()
         {
             _velocityDirectionCalculator = new VelocityDirectionCalculator(Character.Motor, Character.Controller);
+            Character.MovementInput.MovementInputUpdated += OnMovementInputUpdated;
+            Character.Controller.VelocityUpdated += OnVelocityUpdated;
+        }
+
+        void OnVelocityUpdated(Vector3 velocity)
+        {
+            if (velocity.HasValue())
+            {
+                Log($"Movement detected... Trying to enter movement state.");
+                Character.SubStateMachine.TrySetState(this);
+            }
+        }
+
+        void OnMovementInputUpdated(MovementInput movementInput)
+        {
+            if (movementInput.HasInput)
+            {
+                Log($"Movement detected... Trying to enter movement state.");
+                Character.SubStateMachine.TrySetState(this);
+            }
         }
 
         void OnEnable()

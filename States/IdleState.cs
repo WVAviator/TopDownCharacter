@@ -28,10 +28,10 @@ namespace TopDownCharacter.States
 
         bool _isTurningInPlace;
 
-        void Start()
+        protected override void LateAwake()
         {
-            _turnInPlaceCalculator =
-                new TurnInPlaceCalculator(Character.Motor, Character.MovementInput);
+            Character.MovementInput.MovementInputUpdated += OnMovementUpdated;
+            Character.Controller.VelocityUpdated += OnMovementUpdated;
 
             _leftTurn90Animation.Events.OnEnd += ResetPrimaryIdle;
             _leftTurn180Animation.Events.OnEnd += ResetPrimaryIdle;
@@ -39,6 +39,25 @@ namespace TopDownCharacter.States
             _rightTurn180Animation.Events.OnEnd += ResetPrimaryIdle;
             _primaryIdleAnimation.Events.OnEnd += ResetPrimaryIdle;
             _secondaryIdleAnimations.ForEach(s => s.Events.OnEnd += ResetPrimaryIdle);
+        }
+
+        void Start()
+        {
+            _turnInPlaceCalculator =
+                new TurnInPlaceCalculator(Character.Motor, Character.MovementInput);
+        }
+
+        void OnMovementUpdated(Vector3 velocity)
+        {
+            OnMovementUpdated(Character.MovementInput.CurrentMovementInput);
+        }
+
+        void OnMovementUpdated(MovementInput movementInput)
+        {
+            if (movementInput.HasInput || Character.Motor.Velocity.HasValue()) return;
+            
+            Log($"No input or movement detected... Trying to enter idle state.");
+            Character.SubStateMachine.TrySetState(this);
         }
 
         void OnEnable()

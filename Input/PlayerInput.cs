@@ -22,7 +22,7 @@ namespace TopDownCharacter
 
         [SerializeField] Camera _mainCamera;
 
-        [SerializeField] bool _debug;
+        [SerializeField] float _minimumSprintInputMagnitude = 0.75f;
 
         public bool SprintEnabled { get; set; }
 
@@ -120,6 +120,8 @@ namespace TopDownCharacter
             (bool hasInput, Vector3 cameraCorrectedInputVector) = ExtractMovementVector(context);
             
             Trace("Final Movement Vector", cameraCorrectedInputVector);
+
+            ModifySprint(cameraCorrectedInputVector);
             
             Draw( "Sprint Enabled", SprintEnabled);
 
@@ -131,6 +133,11 @@ namespace TopDownCharacter
             };
             
             MovementInputUpdated?.Invoke(_currentMovementInput);
+        }
+
+        void ModifySprint(Vector3 cameraCorrectedInputVector)
+        {
+            if (cameraCorrectedInputVector.sqrMagnitude < _minimumSprintInputMagnitude * _minimumSprintInputMagnitude) SprintEnabled = false;
         }
 
         (bool hasInput, Vector3 cameraCorrectedInputVector) ExtractMovementVector(InputAction.CallbackContext context)
