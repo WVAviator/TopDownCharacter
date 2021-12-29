@@ -1,0 +1,20 @@
+{
+    "name": "TopDownCharacter",
+    "rootNamespace": "TopDownCharacter",
+    "references": [
+        "GUID:4c25c05f410a3a447a75c3b0909152ef",
+        "GUID:6d4810c931e638d489b58e9b332f3fb9",
+        "GUID:a8e783790be5c754ebbdd4e448244923",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:b2665e54e4314ae429d34fdeafc9f3e0"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
