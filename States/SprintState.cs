@@ -23,6 +23,10 @@ namespace TopDownCharacter.States
             Character.MovementInput.MovementInputUpdated += OnMovementInputUpdated;
         }
 
+        public override float Priority => 6;
+
+        public override bool CanEnterState => Character.MovementInput.SprintEnabled;
+
         void OnMovementInputUpdated(MovementInput movementInput)
         {
             if (movementInput.SprintEnabled)
@@ -59,9 +63,11 @@ namespace TopDownCharacter.States
 
             if (_velocityDirectionCalculator.VelocityFacingAngle > _minimumVelocityFacingAngle)
             {
-                Log($"Character is trying to turn too sharply, sprint will be disabled.");
+                Log($"Character is trying to strafe, sprint will be disabled.");
                 Character.MovementInput.SprintEnabled = false;
             }
+            
+            if (!Character.MovementInput.SprintEnabled) Character.State.Reset();
         }
     }
 }

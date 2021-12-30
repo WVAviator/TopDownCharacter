@@ -30,8 +30,8 @@ namespace TopDownCharacter.States
 
         protected override void LateAwake()
         {
-            Character.MovementInput.MovementInputUpdated += OnMovementUpdated;
-            Character.Controller.VelocityUpdated += OnMovementUpdated;
+            //Character.MovementInput.MovementInputUpdated += OnMovementUpdated;
+            //Character.Controller.VelocityUpdated += OnMovementUpdated;
 
             _leftTurn90Animation.Events.OnEnd += ResetPrimaryIdle;
             _leftTurn180Animation.Events.OnEnd += ResetPrimaryIdle;
@@ -40,6 +40,11 @@ namespace TopDownCharacter.States
             _primaryIdleAnimation.Events.OnEnd += ResetPrimaryIdle;
             _secondaryIdleAnimations.ForEach(s => s.Events.OnEnd += ResetPrimaryIdle);
         }
+
+        public override float Priority => 0;
+
+        public override bool CanEnterState =>
+            Character.Motor.Velocity.IsBasicallyZero();
 
         void Start()
         {
@@ -128,7 +133,7 @@ namespace TopDownCharacter.States
             }
         }
 
-        public override bool CanExitState => !Character.Motor.GroundingStatus.IsStableOnGround || Character.MovementInput.CurrentMovementInput.HasInput;
+        //public override bool CanExitState => !Character.Motor.GroundingStatus.IsStableOnGround || Character.MovementInput.CurrentMovementInput.HasInput;
 
         void FixedUpdate()
         {

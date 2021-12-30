@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace TopDownCharacter.States
 {
-    public abstract class CharacterState : StateBehaviour
+    public abstract class CharacterState : StateBehaviour, IPrioritizable
     {
         protected Character Character;
         [SerializeField] bool _loggingEnabled;
@@ -66,5 +66,7 @@ namespace TopDownCharacter.States
             string logger = this.GetType().Name + "." + name;
             DebugGraph.Log(name, f);
         }
+
+        public abstract float Priority { get; }
     }
 }

@@ -7,16 +7,14 @@ namespace TopDownCharacter
     public static class AnimationSelector
     {
 
-        public static ClipTransition MatchMotionMagnitude(List<ClipTransition> clipTransitions, Vector3 motion)
+        public static ClipTransition MatchLateralMotion(List<ClipTransition> clipTransitions, Vector3 motion)
         {
-            float motionMagnitude = motion.sqrMagnitude;
-            
             float closestDifference = float.PositiveInfinity;
             int closestDifferenceIndex = 0;
 
             for (int i = 0; i < clipTransitions.Count; i++)
             {
-                float difference = (clipTransitions[i].Clip.averageSpeed.sqrMagnitude - motionMagnitude).Abs();
+                float difference = (clipTransitions[i].Clip.averageSpeed.z - motion.z).Abs();
                 if (difference < closestDifference)
                 {
                     closestDifference = difference;

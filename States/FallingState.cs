@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Animancer;
 using Animancer.FSM;
 using KinematicCharacterController;
@@ -14,21 +15,23 @@ namespace TopDownCharacter.States
         [Tooltip("If vertical velocity magnitude exceeds this value, the character will begin flailing and will land hard.")]
         [SerializeField] float maxVerticalControlledVelocity = -10f;
 
-        [SerializeField] ClipTransition _safeLandingAnimation;
-        [SerializeField] ClipTransition _hardLandingAnimation;
+        [SerializeField] List<ClipTransition> _safeLandingAnimations;
+        [SerializeField] List<ClipTransition> _hardLandingAnimations;
 
         bool _isFallingUncontrolled;
         bool _landed;
         bool _canExitState;
 
+        public override bool CanEnterState => !Character.Motor.GroundingStatus.IsStableOnGround;
         public override bool CanExitState => _canExitState;
 
         protected override void LateAwake()
         {
-            Character.Controller.GroundingStatusChanged += OnGroundingStatusChanged;
-            _safeLandingAnimation.Events.OnEnd += ResumeGroundedState;
-            _hardLandingAnimation.Events.OnEnd += ResumeGroundedState;
+            _safeLandingAnimations.ForEach(a => a.Events.OnEnd += ResumeGroundedState);
+            _hardLandingAnimations.ForEach(a => a.Events.OnEnd += ResumeGroundedState);
         }
+
+        public override float Priority => 10;
 
         void OnEnable()
         {
@@ -39,13 +42,6 @@ namespace TopDownCharacter.States
             Character.Animancer.Play(_fallingControlledAnimation);
         }
 
-        void OnGroundingStatusChanged(CharacterGroundingReport groundingStatus)
-        {
-            Log($"Registered a change in grounding status, character is now {(groundingStatus.IsStableOnGround ? "stable on the ground." : "in the air.")}");
-            if (!groundingStatus.IsStableOnGround) Character.SubStateMachineBuffer.Buffer(this, 0.5f);
-            else Landed();
-        }
-
         void FixedUpdate()
         {
             if (!_isFallingUncontrolled && Character.Motor.Velocity.y < maxVerticalControlledVelocity)
@@ -53,6 +49,8 @@ namespace TopDownCharacter.States
                 _isFallingUncontrolled = true;
                 Character.Animancer.Play(_fallingUncontrolledAnimation);
             }
+
+            if (Character.Motor.GroundingStatus.IsStableOnGround) Landed();
         }
 
         void Landed()
@@ -64,7 +62,7 @@ namespace TopDownCharacter.States
             _landed = true;
             
             ClipTransition landingAnimation =
-                _isFallingUncontrolled ? _hardLandingAnimation : _safeLandingAnimation;
+                _isFallingUncontrolled ? AnimationSelector.RandomClipTransition(_hardLandingAnimations) : AnimationSelector.MatchLateralMotion(_safeLandingAnimations, Character.Motor.Velocity);
 
             Character.Controller.RootMotionEnabled = true;
                 
@@ -78,7 +76,7 @@ namespace TopDownCharacter.States
             
             Log($"Landing animation completed. Resuming idle.");
 
-            Character.ParentStateMachine.CurrentState.ForceSetDefaultState();
+            Character.State.Reset();
         }
     }
 }

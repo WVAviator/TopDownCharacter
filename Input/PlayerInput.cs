@@ -104,6 +104,7 @@ namespace TopDownCharacter
         void TriggerJump(InputAction.CallbackContext obj)
         {
             Jump?.Invoke();
+            SprintEnabled = false;
         }
 
         void UnsubscribeInputActionEvents()
@@ -244,5 +245,6 @@ namespace TopDownCharacter
         }
 
         public event Action Jump;
+        public bool JumpedThisFrame => _activeInputActionMap.FindAction("Jump").WasPerformedThisFrame();
     }
 }

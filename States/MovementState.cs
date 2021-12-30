@@ -13,9 +13,14 @@ namespace TopDownCharacter.States
         protected override void LateAwake()
         {
             _velocityDirectionCalculator = new VelocityDirectionCalculator(Character.Motor, Character.Controller);
-            Character.MovementInput.MovementInputUpdated += OnMovementInputUpdated;
-            Character.Controller.VelocityUpdated += OnVelocityUpdated;
+            //Character.MovementInput.MovementInputUpdated += OnMovementInputUpdated;
+            //Character.Controller.VelocityUpdated += OnVelocityUpdated;
         }
+
+        public override float Priority => 1;
+
+        public override bool CanEnterState =>
+            Character.Motor.Velocity.HasValue() || Character.MovementInput.CurrentMovementInput.HasInput;
 
         void OnVelocityUpdated(Vector3 velocity)
         {
@@ -44,6 +49,8 @@ namespace TopDownCharacter.States
         {
             Draw("Movement Parameter", _velocityDirectionCalculator.VelocityFacingDirection);
             _movementAnimations.State.Parameter = _velocityDirectionCalculator.VelocityFacingDirection;
+            
+            if (Character.Motor.Velocity.IsBasicallyZero()) Character.State.Reset();
         }
     }
 }

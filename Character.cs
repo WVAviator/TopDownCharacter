@@ -28,13 +28,15 @@ namespace TopDownCharacter
         [HideInInspector] public IActionInput ActionInput;
         [HideInInspector] public TopDownController Controller;
 
-        [HideInInspector] public StateMachine<LocomotionParentState> ParentStateMachine;
+        [HideInInspector] public StateMachine<LocomotionParentState> StateMachine;
         public LocomotionParentState BasicLocomotion;
 
-        public StateMachine<CharacterState> SubStateMachine => ParentStateMachine.CurrentState.StateMachine;
+        public StateMachine<CharacterState> SubStateMachine => StateMachine.CurrentState.StateMachine;
 
         public StateMachine<CharacterState>.InputBuffer SubStateMachineBuffer =>
-            ParentStateMachine.CurrentState.InputBuffer;
+            StateMachine.CurrentState.InputBuffer;
+
+        public LocomotionParentState State => StateMachine.CurrentState;
 
         void Awake()
         {
@@ -48,7 +50,7 @@ namespace TopDownCharacter
 
         void Start()
         {
-            ParentStateMachine = new StateMachine<LocomotionParentState>(BasicLocomotion);
+            StateMachine = new StateMachine<LocomotionParentState>(BasicLocomotion);
         }
     }
 }
